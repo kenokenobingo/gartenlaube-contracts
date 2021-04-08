@@ -48,6 +48,10 @@ const {
 } = require("../../../utils/DaoFactory.js");
 
 describe("Core - Extension - NFT", () => {
+  beforeAll(async () => {
+    await deployDao(null, {});
+  });
+
   it("should be possible to create a dao with a nft extension", async () => {
     const daoOwner = accounts[0];
     const identityDao = await createIdentityDao(daoOwner);

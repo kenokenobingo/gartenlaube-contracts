@@ -133,13 +133,27 @@ const deployDao = async (deployer, options) => {
   const deployTestTokens = !!options.deployTestTokens;
   const maxExternalTokens = options.maxExternalTokens || 100;
 
-  deployer ? await deployer.deploy(DaoRegistry) : await DaoRegistry.new();
+  if (deployer) {
+    await deployer.deploy(DaoRegistry);
+
+    await deployer.deploy(BankExtension);
+    const identityBank = await BankExtension.deployed();
+    await deployer.deploy(BankFactory, identityBank.address);
+
+    await deployer.deploy(NFTExtension);
+    const identityNFTExt = await NFTExtension.deployed();
+    await deployer.deploy(NFTCollectionFactory, identityNFTExt.address);
+  } else {
+    await DaoRegistry.new();
+
+    const identityBank = await BankExtension.new();
+    await BankFactory.new(identityBank.address);
+
+    const identityNFTExt = await NFTExtension.new();
+    await NFTCollectionFactory.new(identityNFTExt.address);
+  }
 
   const { dao, daoFactory } = await cloneDaoDeployer(deployer);
-
-  await deployer.deploy(BankExtension);
-  const identityBank = await BankExtension.deployed();
-  await deployer.deploy(BankFactory, identityBank.address);
   const bankFactory = await BankFactory.deployed();
   await bankFactory.createBank(maxExternalTokens);
   let pastEvent;
@@ -153,9 +167,6 @@ const deployDao = async (deployer, options) => {
   let creator = await dao.getMemberAddress(1);
   dao.addExtension(sha3("bank"), bank.address, creator);
 
-  await deployer.deploy(NFTExtension);
-  const identityNFTExt = await NFTExtension.deployed();
-  await deployer.deploy(NFTCollectionFactory, identityNFTExt.address);
   const nftCollFactory = await NFTCollectionFactory.deployed();
   await nftCollFactory.createNFTCollection();
   pastEvent = undefined;
@@ -240,7 +251,8 @@ const createDao = async (
   maxExternalTokens = 100,
   maxChunks = maximumChunks
 ) => {
-  const daoFactory = await DaoFactory.deployed();
+  let a = await DaoFactory.deployed();
+  const daoFactory = a ? a : DaoFactory;
   const daoName = "test-dao-" + counter++;
   await daoFactory.createDao(daoName, senderAccount);
 
@@ -625,9 +637,11 @@ const cloneDao = async (owner, identityAddr, name) => {
 const cloneDaoDeployer = async (deployer) => {
   // newDao: uses clone factory to clone the contract deployed at the identityAddress
   const dao = await DaoRegistry.deployed();
-  await deployer.deploy(DaoFactory, dao.address);
-  let daoFactory = await DaoFactory.deployed();
+  deployer
+    ? await deployer.deploy(DaoFactory, dao.address)
+    : await DaoFactory.new(dao.address);
 
+  let daoFactory = await DaoFactory.deployed();
   await daoFactory.createDao("test-dao", ETH_TOKEN);
   // checking the gas usaged to clone a contract
   let pastEvents = await daoFactory.getPastEvents();
