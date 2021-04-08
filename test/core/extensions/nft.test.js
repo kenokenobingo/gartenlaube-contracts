@@ -29,10 +29,9 @@ const {
   sha3,
   toBN,
   toWei,
-  createDao,
   createIdentityDao,
-  createNFTDao,
   deployDao,
+  deployNFTDao,
   getNetworkDetails,
   accounts,
   sharePrice,
@@ -48,53 +47,25 @@ const {
 } = require("../../../utils/DaoFactory.js");
 
 describe("Core - Extension - NFT", () => {
-  beforeAll(async () => {
-    await deployDao(null, {});
-  });
-
   it("should be possible to create a dao with a nft extension", async () => {
-    const daoOwner = accounts[0];
-    const identityDao = await createIdentityDao(daoOwner);
-    const daoFactory = await DaoFactory.new(identityDao.address);
-
-    const identityBank = await BankExtension.new();
-    const bankExtFactory = await BankFactory.new(identityBank.address);
-
-    const identityNft = await NFTExtension.new();
-    const nftExtFactory = await NFTCollectionFactory.new(identityNft.address);
-
-    const dao = await createDao(
-      daoOwner,
-      sharePrice,
-      numberOfShares,
-      10,
-      1,
-      ETH_TOKEN,
-      true,
-      100,
-      100,
-      daoFactory,
-      bankExtFactory,
-      nftExtFactory
-    );
+    const dao = await deployDao(null, {});
 
     const nftExtension = await dao.getExtensionAddress(sha3("nft"));
     expect(nftExtension).not.equal(null);
   });
 
-  // it("should be possible to create a dao and register a new NFT token to the collection", async () => {
-  //   const { dao, pixelNFT } = await createNFTDao(accounts[0]);
+  it("should be possible to create a dao and register a new NFT token to the collection", async () => {
+    const { dao, pixelNFT } = await deployNFTDao();
 
-  //   const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-  //   const nftExtension = await NFTExtension.at(nftExtAddr);
-  //   const isAllowed = await nftExtension.isNFTAllowed(pixelNFT.address);
-  //   assert.equal(isAllowed, true);
-  //   expect(isAllowed).equals(true);
-  // });
+    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
+    const nftExtension = await NFTExtension.at(nftExtAddr);
+    const isAllowed = await nftExtension.isNFTAllowed(pixelNFT.address);
+    expect(isAllowed).equals(true);
+  });
 
   // it("should be possible check how many NFTs are in the collection", async () => {
   //   const { dao } = await createNFTDao(accounts[0]);
-
+  //
   //   const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
   //   const nftExtension = await NFTExtension.at(nftExtAddr);
   //   const total = await nftExtension.nbNFTs();

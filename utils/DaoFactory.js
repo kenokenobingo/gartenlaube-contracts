@@ -132,33 +132,42 @@ const deployDao = async (deployer, options) => {
   const chainId = options.chainId || 1;
   const deployTestTokens = !!options.deployTestTokens;
   const maxExternalTokens = options.maxExternalTokens || 100;
+  const finalize = options.finalize || true;
 
+  let daoRegistry;
+  let bankExtFactory;
+  let nftExtFactory;
   if (deployer) {
     await deployer.deploy(DaoRegistry);
+    daoRegistry = await DaoRegistry.deployed();
 
     await deployer.deploy(BankExtension);
     const identityBank = await BankExtension.deployed();
     await deployer.deploy(BankFactory, identityBank.address);
+    bankExtFactory = await BankFactory.deployed();
 
     await deployer.deploy(NFTExtension);
     const identityNFTExt = await NFTExtension.deployed();
     await deployer.deploy(NFTCollectionFactory, identityNFTExt.address);
+    nftExtFactory = await NFTCollectionFactory.deployed();
   } else {
-    await DaoRegistry.new();
+    daoRegistry = await DaoRegistry.new();
 
     const identityBank = await BankExtension.new();
-    await BankFactory.new(identityBank.address);
+    bankExtFactory = await BankFactory.new(identityBank.address);
 
     const identityNFTExt = await NFTExtension.new();
-    await NFTCollectionFactory.new(identityNFTExt.address);
+    nftExtFactory = await NFTCollectionFactory.new(identityNFTExt.address);
   }
 
-  const { dao, daoFactory } = await cloneDaoDeployer(deployer);
-  const bankFactory = await BankFactory.deployed();
-  await bankFactory.createBank(maxExternalTokens);
+  const { dao, daoFactory } = await cloneDaoDeployer(
+    deployer,
+    daoRegistry.address
+  );
+  await bankExtFactory.createBank(maxExternalTokens);
   let pastEvent;
   while (pastEvent === undefined) {
-    let pastEvents = await bankFactory.getPastEvents();
+    let pastEvents = await bankExtFactory.getPastEvents();
     pastEvent = pastEvents[0];
   }
 
@@ -167,11 +176,10 @@ const deployDao = async (deployer, options) => {
   let creator = await dao.getMemberAddress(1);
   dao.addExtension(sha3("bank"), bank.address, creator);
 
-  const nftCollFactory = await NFTCollectionFactory.deployed();
-  await nftCollFactory.createNFTCollection();
+  await nftExtFactory.createNFTCollection();
   pastEvent = undefined;
   while (pastEvent === undefined) {
-    let pastEvents = await nftCollFactory.getPastEvents();
+    let pastEvents = await nftExtFactory.getPastEvents();
     pastEvent = pastEvents[0];
   }
 
@@ -230,14 +238,40 @@ const deployDao = async (deployer, options) => {
 
   // deploy test token contracts (for testing convenience)
   if (deployTestTokens) {
-    await deployer.deploy(OLToken, toBN("1000000000000000000000000"));
-    await deployer.deploy(TestToken1, 1000000);
-    await deployer.deploy(TestToken2, 1000000);
-    await deployer.deploy(Multicall);
-    await deployer.deploy(PixelNFT, 100);
+    if (deployer) {
+      await deployer.deploy(OLToken, toBN("1000000000000000000000000"));
+      await deployer.deploy(TestToken1, 1000000);
+      await deployer.deploy(TestToken2, 1000000);
+      await deployer.deploy(Multicall);
+      await deployer.deploy(PixelNFT, 100);
+    }
+  }
+
+  if (finalize) {
+    await dao.finalizeDao();
   }
 
   return dao;
+};
+
+const deployNFTDao = async () => {
+
+  const pixelNFT = await PixelNFT.new(100); // 100x100 pixel matrix
+  const dao = await deployDao(null, {
+    unitPrice: sharePrice,
+    nbShares: numberOfShares,
+    votingPeriod: 10,
+    gracePeriod: 1,
+    tokenAddr: ETH_TOKEN,
+    finalize: false,
+  });
+
+  const tributeNFT = await getContract(dao, "tribute-nft", TributeNFTContract);
+  await tributeNFT.configureDao(dao.address, pixelNFT.address);
+  
+  await dao.finalizeDao();
+
+  return { dao, pixelNFT };
 };
 
 const createDao = async (
@@ -251,8 +285,7 @@ const createDao = async (
   maxExternalTokens = 100,
   maxChunks = maximumChunks
 ) => {
-  let a = await DaoFactory.deployed();
-  const daoFactory = a ? a : DaoFactory;
+  const daoFactory = await DaoFactory.deployed();
   const daoName = "test-dao-" + counter++;
   await daoFactory.createDao(daoName, senderAccount);
 
@@ -319,29 +352,6 @@ const createDao = async (
   }
 
   return dao;
-};
-
-const createNFTDao = async (daoOwner) => {
-  const dimenson = 100; // 100x100 pixel matrix
-  const pixelNFT = await PixelNFT.new(dimenson);
-
-  const dao = await createDao(
-    daoOwner,
-    sharePrice,
-    numberOfShares,
-    10,
-    1,
-    ETH_TOKEN,
-    false
-  );
-
-  const tributeNFT = await getContract(dao, "tribute-nft", TributeNFTContract);
-
-  await tributeNFT.configureDao(dao.address, pixelNFT.address);
-
-  await dao.finalizeDao();
-
-  return { dao, pixelNFT };
 };
 
 const createIdentityDao = async (owner) => {
@@ -634,14 +644,15 @@ const cloneDao = async (owner, identityAddr, name) => {
   return { daoFactory, daoAddress: _address, daoName: _name };
 };
 
-const cloneDaoDeployer = async (deployer) => {
-  // newDao: uses clone factory to clone the contract deployed at the identityAddress
-  const dao = await DaoRegistry.deployed();
-  deployer
-    ? await deployer.deploy(DaoFactory, dao.address)
-    : await DaoFactory.new(dao.address);
+const cloneDaoDeployer = async (deployer, identityAddr) => {
+  let daoFactory;
+  if (deployer) {
+    await deployer.deploy(DaoFactory, identityAddr);
+    daoFactory = await DaoFactory.deployed();
+  } else {
+    daoFactory = await DaoFactory.new(identityAddr);
+  }
 
-  let daoFactory = await DaoFactory.deployed();
   await daoFactory.createDao("test-dao", ETH_TOKEN);
   // checking the gas usaged to clone a contract
   let pastEvents = await daoFactory.getPastEvents();
@@ -746,8 +757,8 @@ module.exports = {
   createIdentityDao,
   cloneDao,
   createDao,
-  createNFTDao,
   deployDao,
+  deployNFTDao,
   addDefaultAdapters,
   getContract,
   entry,
