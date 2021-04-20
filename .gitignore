@@ -41,6 +41,7 @@ build/Release
 node_modules/
 jspm_packages/
 subgraph/node_modules/
+subgraph/yarn.lock
 
 # TypeScript v1 declaration files
 typings/
