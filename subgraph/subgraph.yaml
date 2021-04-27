@@ -30,7 +30,7 @@ templates:
 # ====================================== DaoRegistry ====================================
 - kind: ethereum/contract
   name: DaoRegistry
-  network: mainnet
+  network: rinkeby
   source:
     abi: DaoRegistry
   mapping:
@@ -91,7 +91,7 @@ templates:
 # ====================================== BankExtension ====================================
 - kind: ethereum/contract
   name: BankExtension
-  network: mainnet
+  network: rinkeby
   source:
     abi: BankExtension
   mapping:
@@ -116,7 +116,7 @@ templates:
 # ====================================== NFTExtension ====================================
 - kind: ethereum/contract
   name: NFTExtension
-  network: mainnet
+  network: rinkeby
   source:
     abi: NFTExtension
   mapping:
