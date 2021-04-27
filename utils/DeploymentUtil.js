@@ -98,7 +98,7 @@ const deployDao = async (options) => {
     batchVoting: null,
   };
 
-  if (options.isOffchainVoting) {
+  if (options.offchainVoting) {
     const {
       offchainVoting,
       handleBadReporterAdapter,
@@ -481,7 +481,6 @@ const configureDao = async ({
     }),
     entryBank(tribute, {
       ADD_TO_BALANCE: true,
-      SUB_FROM_BALANCE: true,
       REGISTER_NEW_TOKEN: true,
     }),
     entryBank(distribute, {
