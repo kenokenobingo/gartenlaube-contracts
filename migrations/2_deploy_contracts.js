@@ -77,7 +77,7 @@ async function deployRinkebyDao(deployFunction, network) {
     maxExternalTokens: 100,
     couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
     daoName: process.env.DAO_NAME,
-    offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
+    offchainAdmin: "0x9fF75B8e1D6A783c2De4535E46d986dbeB09CC31",
   });
   return dao;
 }
