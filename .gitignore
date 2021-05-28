@@ -130,3 +130,5 @@ subgraph.yaml
 
 # Logs of the contract deployment
 *-deploy.log
+
+test/.DS_Store
