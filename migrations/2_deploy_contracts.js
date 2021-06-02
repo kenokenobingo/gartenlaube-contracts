@@ -71,8 +71,8 @@ async function deployTestDao(deployFunction, network, accounts) {
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
-    couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
-    offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
+    couponCreatorAddress: "0x9fF75B8e1D6A783c2De4535E46d986dbeB09CC31",
+    offchainAdmin: "0x9fF75B8e1D6A783c2De4535E46d986dbeB09CC31",
     daoName: process.env.DAO_NAME,
     owner: accounts[0],
   });
