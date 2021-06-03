@@ -10,9 +10,9 @@
       name: DaoFactory
       network: rinkeby
       source:
-        address: "0xb44feDAA82143E93262AFf4377Acd5E719e2836B"
+        address: "0x5FaE143494F2017D74ED798bf264F34Beef20918"
         abi: DaoFactory
-        startBlock: 8693713
+        startBlock: 8698033
       mapping:
         kind: ethereum/events
         apiVersion: 0.0.4
