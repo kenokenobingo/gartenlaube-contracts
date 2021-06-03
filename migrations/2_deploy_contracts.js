@@ -101,8 +101,8 @@ async function deployRinkebyDao(deployFunction, network) {
     erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
     erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
     maxChunks: toBN("100000"),
-    votingPeriod: 600, // 600 secs = 10 mins
-    gracePeriod: 600, // 600 secs = 10 mins
+    votingPeriod: 30, // 600 secs = 10 mins
+    gracePeriod: 5, // 600 secs = 10 mins
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: true,
