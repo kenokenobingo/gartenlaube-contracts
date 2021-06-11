@@ -1,0 +1,36 @@
+<h1>Tribute DAO Framework Subgraph</h1>
+<blockquote>
+<p>Graph definition for the Tribute DAO Framework</p>
+</blockquote>
+<h2>Subgraph Setup</h2>
+<h3>Multiple Ethereum Networks Setup</h3>
+<p>Managing different network deployments for the contracts, is currently setup using a config file in <code>config/subgraph-config.json</code>, providing the network, start block, subgraph directory, github username, and contract address for the DaoFactory:</p>
+<p>For example:</p>
+<pre><code>[
+  {
+   &quot;network&quot;: &quot;rinkeby&quot;,
+    &quot;daoFactoryAddress&quot;: &quot;0x10a14A1665DE72faeDb866Fc75c57036813E2Eb2&quot;,
+    &quot;daoFactoryStartBlock&quot;: 6204221,
+    &quot;GITHUB_USERNAME&quot;: &quot;openlawteam&quot;,
+    &quot;SUBGRAPH_NAME&quot;: &quot;tribute-dev&quot;
+  },
+  {
+   &quot;network&quot;: &quot;mainnet&quot;,
+    &quot;daoFactoryAddress&quot;: &quot;0xac665be1e44cc4eec388e34c3899c271fee847f4&quot;,
+    &quot;daoFactoryStartBlock&quot;: 8332211,
+    &quot;GITHUB_USERNAME&quot;: &quot;openlawteam&quot;,
+    &quot;SUBGRAPH_NAME&quot;: &quot;tribute-prod&quot;
+  }
+]
+</code></pre>
+<p>In <code>.env</code> (create <code>.env</code> file if necessary):</p>
+<pre><code>GRAPH_ACCESS_TOKEN=...
+</code></pre>
+<p>Then from the <code>subgraph</code> directory, simply run the following command to deploy the subgraphs:</p>
+<pre><code>npx ts-node subgraph-deployer.ts
+</code></pre>
+<p>See <a href="https://thegraph.com/docs/deploy-a-subgraph#redeploying-a-subgraph">here</a> for more information</p>
+<h3>Local Development Graph Setup</h3>
+<p>Check out the setup guide <a href="https://github.com/openlawteam/tribute-contracts/blob/master/docker/README.md">here</a></p>
+<h2>Subgraph Tests</h2>
+<p>TODO</p>

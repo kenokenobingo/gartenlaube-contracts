@@ -1,0 +1,68 @@
+<h2>Extension description and scope</h2>
+<p>This extension manages the funds of the DAO. The funds can be ETH or any ERC-20 token.</p>
+<p>It also manages internal tokens such as units and loot (but could be anything else).</p>
+<p>On top of that, it implements balance checkpoints so it is possible to retrieve prior balance at a certain block number. The balance is managed for the member address (not the delegate key).</p>
+<p><code>availableTokens</code> and <code>availableInteralTokens</code>, are tokens that have been whitelisted for use with the DAO. A token goes from <code>tokens</code> or <code>internalTokens</code> to <code>availableTokens</code> and <code>availableInternalTokens</code> respectively when the function <code>registerPotentialNewToken</code> or <code>registerPotentialNewInternalToken</code> is called.</p>
+<h2>Extension state</h2>
+<h3>address[] public tokens</h3>
+<p>List of all the external tokens that are whitelisted in the bank.</p>
+<h3>address[] public internalTokens</h3>
+<p>List of all the internal tokens that have been whitelisted / created.</p>
+<h3>mapping(address =&gt; bool) public availableTokens</h3>
+<p>Same as the list of tokens but accessible in a random way.</p>
+<h3>mapping(address =&gt; bool) public availableInternalTokens;</h3>
+<p>Same as the list of internal tokens but accessible in a random way.</p>
+<h3>mapping(address =&gt; mapping(address =&gt; mapping(uint32 =&gt; Checkpoint))) public checkpoints</h3>
+<p>Checkpoints for each token / member.</p>
+<h3>mapping(address =&gt; mapping(address =&gt; uint32)) public numCheckpoints</h3>
+<p>Checkpoint counts for each token / member.</p>
+<h2>Functions description, assumptions, checks, dependencies, interactions and access control</h2>
+<h3>function initialize(DaoRegistry _dao, address creator)</h3>
+<p>This function can be called only once and only by the creator of the DAO.
+It registers the internal token UNITS, and gives 1 unit to the creator.</p>
+<h3>function withdraw(address payable account, address tokenAddr, uint256 amount)</h3>
+<p>This function is only accessible if you have extension access <code>WITHDRAW</code>.</p>
+<p>The function subtracts from the account the amount and then transfers the actual tokens to the account address.</p>
+<h3>function isInternalToken(address token) returns (bool)</h3>
+<p>Returns true if the token address is a registered internal token.</p>
+<h3>function isTokenAllowed(address token) returns (bool)</h3>
+<p>Returns true if the token address is a registered external token.</p>
+<h3>function setMaxExternalTokens(uint8 maxTokens)</h3>
+<p>Sets the maximum number of external tokens managed by the Bank. It is possible to set that only if the Bank extension has not been initialized, otherwise it will fail. By default the extension can not handle more than 200 tokens - to prevent issues with block size limit.</p>
+<h3>function registerPotentialNewToken(address token)</h3>
+<p>Whitelists a token if it is not already the case.</p>
+<h3>function registerPotentialNewInternalToken(address token)</h3>
+<p>Whitelists an internal token if it is not already the case.</p>
+<h3>function getToken(uint256 index) external view returns (address)</h3>
+<p>Gets the token at index in tokens.</p>
+<h3>function nbTokens() external view returns (uint256)</h3>
+<p>Return the length of tokens.</p>
+<h3>function getInternalToken(uint256 index) external view returns (address)</h3>
+<p>Gets the internal token at index in internalTokens.</p>
+<h3>function nbInternalTokens() external view returns (uint256)</h3>
+<p>Return the length of internalTokens.</p>
+<h3>function addToBalance( address member, address token, uint256 amount)</h3>
+<p>Adds to the member balance the amount in token.
+This also updates the checkpoint for this member / token.</p>
+<h3>function subtractFromBalance(address user, address token, uint256 amount)</h3>
+<p>Subtracts from the member balance the amount in token.
+This also updates the checkpoint for this member / token.</p>
+<h3>function internalTransfer( address from, address to, address token, uint256 amount)</h3>
+<p>Subtracts from the <code>from</code> address and then adds to the <code>to</code> address the amount in token.
+This also updates the checkpoint for the addresses / token.</p>
+<h3>function updateToken(address tokenAddr)</h3>
+<p>This function updates the internal bank accounting by calling the balance of the bank at the given token address.</p>
+<p>If the real total is higher than the internal total, the internal total is updated and the difference is added to the guild bank.
+If the real total is lower than the internal total then we have two cases:</p>
+<ul>
+<li>If the difference is lower than the guild bank, the difference is subtracted from the guild bank and the total is updated.</li>
+<li>If the difference is higher than the guild bank, the guild bank balance is set to 0 and the total is updated to subtract only what has been subtracted from the guild bank.</li>
+</ul>
+<p>Usually, the second case should not happen. A proper ERC-20 should not remove tokens without a direct action from the bank extension (and we have no way to approve the token either). But it is possible that some ERC-20 tokens are dynamically changing the balance and we need to take that into account. If too many tokens are being removed from the bank by a third party, keeping it out of sync seems to make sense to avoid getting into very complex accounting and trying to figure out who should get slashed too.</p>
+<p>If the balance changes again, calling updateToken can fix the issue.</p>
+<h3>function balanceOf(address account, address tokenAddr) returns (uint256)</h3>
+<p>Returns the balance of a certain account for a certain token.</p>
+<h3>function getPriorAmount(address account, address tokenAddr, uint256 blockNumber) returns (uint256)</h3>
+<p>Returns the balance of a certain account for a certain token at a certain point in time (block number).</p>
+<h3>function _createNewAmountCheckpoint(address member, address tokenAddr, uint256 amount)</h3>
+<p>Internal function to create a new amount checkpoint (if a balance has been updated).</p>

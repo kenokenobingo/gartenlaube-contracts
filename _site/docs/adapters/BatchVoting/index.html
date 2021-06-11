@@ -1,0 +1,71 @@
+<h2>BatchVoting description and scope</h2>
+<p>This is another voting adapter that uses the same format used in OffchainVoting but instead of computing the result offchain is doing all the work on chain.</p>
+<p>This means that the gas cost is O(nb votes) but does not need any challenge mechanism.</p>
+<h2>Adapter workflow</h2>
+<p>The workflow is the same as for Offchain voting minus the challenge part.</p>
+<p>startNewVotingForProposal starts a voting session
+Then all the votes happen offchain in snapshot
+Once the votes are done, the client prepares a list of all the votes and sends it to submitVoteResult</p>
+<p>While processing the votes we check that:</p>
+<ul>
+<li>the signature is correct</li>
+<li>the vote was for this particular proposal</li>
+<li>the member addresses are in order and with no duplicate</li>
+</ul>
+<p>From there, the vote enters grace period if potential new votes could change the result and just resolves the vote otherwise.</p>
+<h2>Adapter configuration</h2>
+<p>the two configurations for BatchVoting are <code>Voting period</code> &amp; <code>Grace period</code></p>
+<h2>Adapter state</h2>
+<p>The adapter keeps track of each vote &quot;session&quot; for each dao &amp; proposalId.
+The session has the following properties:
+<code>uint256 snapshot</code> what snapshot (block number) is used for this vote
+<code>uint256 nbYes</code> how many yes votes have been reported
+<code>uint256 nbNo</code> how many no votes have been reported
+<code>address actionId</code> which actionId (adapter address) has created the vote session
+<code>bytes32 proposalHash</code> the proposal hash
+<code>uint256 startingTime</code> when did the vote start
+<code>uint256 gracePeriodStartingTime</code> when did we enter the grace period</p>
+<h2>Dependencies and interactions (internal / external)</h2>
+<p>BatchVoting interacts with Bank extension and DaoRegistry to get information about the member voting.
+The info is:</p>
+<ul>
+<li>its delegate key at the time of voting</li>
+<li>how many units does the member have</li>
+</ul>
+<h2>Functions description and assumptions / checks</h2>
+<p>Describe the public and private functions signatures with proper documentation and clearly explain what each function does. Specify what are expected the arguments and pre-conditions to execute the functions. Also, provide what is the expected outcome.</p>
+<p>Examples:</p>
+<h3>function submitVoteResult(DaoRegistry dao, bytes32 proposalId, VoteEntry[] memory votes)</h3>
+<p>this function submits a vote result for a certain proposal.</p>
+<ul>
+<li>It first processes the votes</li>
+<li>If the result has more weight than the previous one and the vote is still going on, update the result</li>
+<li>If the result has changed from before (pass -&gt; fail or fail -&gt; pass), update the start of grace period to now</li>
+</ul>
+<h3>function getAdapterName()</h3>
+<p>returns the voting adapter name &quot;BatchVotingContract&quot;</p>
+<h3>function processVotes(DaoRegistry dao, bytes32 proposalId, VoteEntry[] memory entries)</h3>
+<p>Process all the votes.</p>
+<p>For each entry, it validates the vote and then computes the result.</p>
+<h3>function validateVote(DaoRegistry dao, BankExtension bank, address actionId, uint256 snapshot, bytes32 proposalHash, address previousAddress, VoteEntry memory entry)</h3>
+<p>It validates the vote entry.
+It does the following checks:</p>
+<ul>
+<li>checks that the memberAddress is the one who signed the vote (or its delegate key)</li>
+<li>checks that the previous member address is &quot;before&quot; (hex order) the current one</li>
+<li>checks that the vote is actually for this proposal</li>
+</ul>
+<p>If it is all good, returns the amount of units the member has at that point in time</p>
+<h3>function getSenderAddress(DaoRegistry dao, address actionId, bytes memory data,address)</h3>
+<p>returns the address that has signed the proposal hash</p>
+<h3>function startNewVotingForProposal(DaoRegistry dao, bytes32 proposalId, bytes memory data)</h3>
+<p>Starts a new voting session.
+It first decode the proposal data, then builds the proposal hash.
+From there, it checks that the signature is for this hash and from an active member.
+It also checks that the block number is not 0 and is not in the future</p>
+<p>if all checks out, we write the actionId (msg.sender), startingTime (block.timestamp), snapshot and proposal hash into the voting session struct</p>
+<h3>function voteResult(DaoRegistry dao, bytes32 proposalId)</h3>
+<p>returns the vote status.</p>
+<h2>Events</h2>
+<h3>NewVoteResult(address dao, address actionId, uint256 nbYes, uint256 nbNo)</h3>
+<p>is emitted when a new vote result has been submitted</p>

@@ -1,0 +1,90 @@
+<h2>Adapter description and scope</h2>
+<p>Guild Kick is the process in which the DAO members decide to kick a member out of the DAO for any given reason.</p>
+<p>In order to kick out a member of the DAO, the members must submit a proposal which needs to be voted on. If the proposal passes, then the member will be kicked out, and the kicked member will be able to withdraw his funds based on the number of units and/or loot that the member was holding when the kick process was started.</p>
+<p>The main goal is to give the members the freedom to choose which individuals or organizations should really be part of the DAO.</p>
+<h2>Adapter workflow</h2>
+<p>The guild kick starts with the other members submitting a kick proposal (function <code>submitKickProposal</code>). The kick proposal indicates which member should be kicked out.</p>
+<p>A member can not kick himself and only members are allowed to create kick proposals, and proposal ids can not be reused.</p>
+<p>The kick proposal gets created, opens for voting, and sponsored by the message sender. The adapter tracks all the kicks that have been executed already by each DAO.</p>
+<p>Once the kick proposal has passed, the other members have to start the actual guild kick process (function <code>processProposal</code>).</p>
+<p>The rage kick process is the only alternative for a kicked member to receive his funds. It uses the current guild balance to calculate the fair amount of funds to return to the kicked member. It is important to mention that this step relies on the number of tokens available in the bank, at this moment there is no limit of tokens available in the bank, but soon it will be updated to have a fixed size. The funds are internally transferred from the Guild bank to the kicked member's account, so the member can withdraw the funds later on using the Withdraw Adapter.</p>
+<h2>Adapter configuration</h2>
+<p>Tokens that are provided by the member have to be allowed/supported by the DAO.</p>
+<p>The member needs to have enough units and/or loot in order to convert it to funds.</p>
+<p>DAORegistry Access Flags: <code>SUBMIT_PROPOSAL</code>.</p>
+<p>Bank Extension Access Flags: <code>WITHDRAW</code>, <code>INTERNAL_TRANSFER</code>, <code>SUB_FROM_BALANCE</code>, <code>ADD_TO_BALANCE</code>.</p>
+<h2>Adapter state</h2>
+<ul>
+<li><code>GuildKickStatus</code>: The kick status (<code>Not Started</code>, <code>In Progress</code>, <code>Done</code>).</li>
+<li><code>GuildKick</code>: State of the guild kick proposal.
+<ul>
+<li><code>memberToKick</code>: The address of the member to kick out of the DAO.</li>
+<li><code>status</code>: The kick status.</li>
+</ul>
+</li>
+<li><code>kicks</code>: Keeps track of all the kicks executed per DAO.</li>
+</ul>
+<h2>Dependencies and interactions (internal / external)</h2>
+<ul>
+<li>
+<p>BankExtension</p>
+<ul>
+<li>checks the kicked member's balance.</li>
+<li>subtracts the kicked member's units.</li>
+<li>adds the burned units to the kicked member's loot account.</li>
+<li>transfers the funds from the DAO account to the kicked member's account.</li>
+<li>gets the available tokens.</li>
+<li>gets the current balance of the guild account.</li>
+</ul>
+</li>
+<li>
+<p>DaoRegistry</p>
+<ul>
+<li>checks if the message sender is actually a member of the DAO.</li>
+<li>checks if the kicked member is actually a member of the DAO.</li>
+<li>process the kick proposal.</li>
+</ul>
+</li>
+<li>
+<p>Voting</p>
+<ul>
+<li>starts a new voting for the kick proposal.</li>
+<li>checks the voting results.</li>
+</ul>
+</li>
+<li>
+<p>FairShareHelper</p>
+<ul>
+<li>to calculate the amount of funds to be returned to the member based on the provided numbers of units and/or loot, taking into account the current balance of the GUILD and kicked member's accounts.</li>
+</ul>
+</li>
+</ul>
+<h2>Functions description and assumptions / checks</h2>
+<h3>receive() external payable</h3>
+<pre><code class="language-solidity">    /**
+     * @notice default fallback function to prevent from sending ether to the contract.
+     */
+    receive() external payable
+</code></pre>
+<h3>function submitProposal</h3>
+<pre><code class="language-solidity">    /**
+     * @notice Creates a guild kick proposal, opens it for voting, and sponsors it.
+     * @dev A member can not kick himself.
+     * @dev Only members that have units or loot can be kicked out.
+     * @dev Proposal ids can not be reused.
+     * @param dao The dao address.
+     * @param proposalId The guild kick proposal id.
+     * @param memberToKick The member address that should be kicked out of the DAO.
+     * @param data Additional information related to the kick proposal.
+     */
+    function submitProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        address memberToKick,
+        bytes calldata data
+    ) external override
+</code></pre>
+<h3>function processProposal</h3>
+<p>If the proposal has passed, sends the fair unit of tokens from the guild bank to the member kicked.</p>
+<h2>Events</h2>
+<p>No events are emitted from this adapter.</p>

@@ -1,0 +1,116 @@
+<h2>Adapter description and scope</h2>
+<p>The Managing adapter handles the proposal creation, sponsorship and processing of a new adapter including its initial configuration, and permissions.</p>
+<p>An adapter can be added, removed or replaced in the DAO registry. In order to remove an adapter one must pass the address 0x0 with the adapter id that needs to be removed. In order to add a new adapter one most provide the adapter id, address and access flags. The address of the new adapter can not be a reserved address, and the id must be a known id as defined in the <code>DaoConstants.sol</code>. The replace adapter operation removes the adapter from the registry based on the adapter id parameter, and also adds a new adapter using the same id but with a new address.</p>
+<h2>Adapter workflow</h2>
+<p>Submit a proposal and check:</p>
+<ul>
+<li>if caller is an active member</li>
+<li>if keys and values have equal length</li>
+<li>if adapter address is valid</li>
+<li>if the access flags don't overflow</li>
+<li>if adapter address is not reserved</li>
+</ul>
+<p>If all the requirements pass, then the proposal is subitted to registry and the adapter stores the proposal data.</p>
+<p>To sponsor a proposal, you need to be an active member, and once sponsored the voting process starts.</p>
+<p>Once the voting period ends, only a member can process the proposal. The proposal is processed only if:</p>
+<ul>
+<li>the caller is an active member</li>
+<li>the has not been processed already</li>
+<li>the proposal has been sponsored</li>
+<li>the voting has passed</li>
+</ul>
+<h2>Adapter configuration</h2>
+<p>DAORegistry Access Flags: <code>SUBMIT_PROPOSAL</code>, <code>REPLACE_ADAPTER</code>.</p>
+<h2>Adapter state</h2>
+<ul>
+<li><code>proposals</code>: All the proposals handled by the adapter per DAO.</li>
+<li><code>ProposalDetails</code>:
+<ul>
+<li><code>adapterId</code>: The id of the adapter to add, remove or replace.</li>
+<li><code>adapterAddress</code>: The address of the new adapter contract.</li>
+<li><code>keys</code>: The configuration keys for the adapter.</li>
+<li><code>values</code>: The values to set for the adapter configuration.</li>
+<li><code>flags</code>: The ACL for the new adapter.</li>
+</ul>
+</li>
+</ul>
+<h2>Dependencies and interactions (internal / external)</h2>
+<ul>
+<li>
+<p>DaoRegistry</p>
+<ul>
+<li>Submits/sponsors/processes a proposal.</li>
+<li>Checks if applicant and/or adapter address are not reserved.</li>
+<li>Executes the replaceAdapter call to update the registry.</li>
+</ul>
+</li>
+<li>
+<p>Voting</p>
+<ul>
+<li>Gets the address that sent the sponsorProposal transaction.</li>
+<li>Starts a new voting for the kick proposal.</li>
+<li>Checks the voting results.</li>
+</ul>
+</li>
+</ul>
+<h2>Functions description and assumptions / checks</h2>
+<h3>function submitProposal</h3>
+<pre><code class="language-solidity">    /**
+     * @notice Creates a proposal to replace, remove or add an adapter.
+     * @dev If the adapterAddress is equal to 0x0, the adapterId is removed from the registry if available.
+     * @dev If the adapterAddress is a reserved address, it reverts.
+     * @dev keys and value must have the same length.
+     * @dev proposalId can not be reused.
+     * @param dao The dao address.
+     * @param proposalId The guild kick proposal id.
+     * @param adapterId The adapter id to replace, remove or add.
+     * @param adapterAddress The adapter address to add or replace. Use 0x0 if you want to remove the adapter.
+     * @param keys The configuration keys for the adapter.
+     * @param values The values to set for the adapter configuration.
+     * @param _flags The ACL for the new adapter, up to 2**128-1.
+     */
+    function submitProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        bytes32 adapterId,
+        address adapterAddress,
+        bytes32[] calldata keys,
+        uint256[] calldata values,
+        uint256 _flags
+    ) external override onlyMember(dao)
+</code></pre>
+<h3>function sponsorProposal</h3>
+<pre><code class="language-solidity">    /**
+     * @notice Sponsor a proposal if the proposal id exists.
+     * @dev Only members are allowed to sponsor proposals.
+     * @param dao The dao address.
+     * @param proposalId The guild kick proposal id.
+     * @param data Additional data that can be used for offchain voting validation.
+     */
+    function sponsorProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        bytes calldata data
+    ) external override onlyMember(dao)
+</code></pre>
+<h3>function processProposal</h3>
+<pre><code class="language-solidity">    /**
+     * @notice Processes a proposal that was sponsored.
+     * @dev Only members can process a proposal.
+     * @dev Only if the voting pass the proposal is processed.
+     * @dev Reverts when the adapter address is already in use and it is an adapter addition.
+     * @param dao The dao address.
+     * @param proposalId The guild kick proposal id.
+     */
+    function processProposal(DaoRegistry dao, bytes32 proposalId)
+        external
+        override
+        onlyMember(dao)
+
+</code></pre>
+<h2>Events</h2>
+<ul>
+<li><code>AdapterRemoved</code>: when an adapter is removed from the regitry. Event emitted by the DAO Registry.</li>
+<li><code>AdapterAdded</code>: when a new adapter is added to the registry. Event emitted by the DAO Registry.</li>
+<li><code>ConfigurationUpdated</code>: when a new configuration is stored in the registry. Event emitted by the DAO Registry.</li>
+</ul>

@@ -1,0 +1,44 @@
+<h2>Adapter description and scope</h2>
+<p>The Withdraw adapter allows a member or an advisor of the DAO to withdraw the available funds in their bank account.</p>
+<p>It is considered a Generic adapter because it does not rely on any proposals to perform an action that changes the DAO state.</p>
+<h2>Adapter workflow</h2>
+<p>The user sends a transaction to withdraw the funds from the internal bank account. If there are no available funds, the transaction is reverted. If the user is using an address that is reserved to the DAO, the transaction is also reverted. And when the user provides a token that is not supported by the bank, the balance is always zero and the transaction gets reverted as well.</p>
+<p>If all the parameters are valid, the user should be able to identify the funds transferred to its own account.</p>
+<h2>Adapter configuration</h2>
+<p>Bank Extension Access Flags: <code>WITHDRAW</code>, <code>SUB_FROM_BALANCE</code>.</p>
+<h2>Adapter state</h2>
+<p>The adapter does not keep track of any state during the withdraw process.</p>
+<h2>Dependencies and interactions (internal / external)</h2>
+<p>BankExtension</p>
+<ul>
+<li>Checks the account balance.</li>
+<li>Executes the withdraw process.</li>
+</ul>
+<p>DAORegistry</p>
+<ul>
+<li>Checks if the account address is not a reserved address.</li>
+</ul>
+<h2>Functions description and assumptions / checks</h2>
+<h3>receive() external payable</h3>
+<pre><code class="language-solidity">    /**
+    * @notice default fallback function to prevent from sending ether to the contract
+    */
+    receive() external payable
+</code></pre>
+<h3>function withdraw</h3>
+<pre><code class="language-solidity">    /**
+     * @notice Allows the member/advisor of the DAO to withdraw the funds from their internal bank account.
+     * @notice Only accounts that are not reserved can withdraw the funds.
+     * @notice If theres is no available balance in the user's account, the transaction is reverted.
+     * @param dao The DAO address.
+     * @param account The account to receive the funds.
+     * @param token The token address to receive the funds.
+     */
+    function withdraw(
+        DaoRegistry dao,
+        address payable account,
+        address token
+    ) external
+</code></pre>
+<h2>Events</h2>
+<p>No events are emitted from this adapter.</p>

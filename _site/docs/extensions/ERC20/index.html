@@ -1,0 +1,186 @@
+<h2>Extension description and scope</h2>
+<p>An <a href="https://docs.openzeppelin.com/contracts/3.x/api/token/erc20">ERC20</a> contract safely manages the transfers of tokens that represent the voting power of each member of the DAO.</p>
+<p>The extension adds to the DAO the capability of managing the voting power of members and external individuals in the DAO. It does that by tracking the token transfers between DAO members, or even, transfer from members to external accounts. That enhances the DAO features by allowing individuals that are not part of the DAO receive voting rights.</p>
+<h2>Extension state</h2>
+<h3>DaoRegistry public dao;</h3>
+<p>The DAO address that this extension belongs to</p>
+<h3>bytes32 public constant ERC20_EXT_TRANSFER_TYPE = keccak256(&quot;erc20ExtTransferType&quot;);</h3>
+<p>The custom configuration to set the transfer type, e.g:</p>
+<ul>
+<li>0: transfers are enabled only between dao members</li>
+<li>1: transfers are enabled between dao members and external accounts</li>
+<li>2: all transfers are paused</li>
+</ul>
+<p>It needs to be set via a <a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Configuration.md">Configuration proposal</a>, if the proposal pass, the new configuration gets stored in the DAO. By default, only transfers between members are allowed.</p>
+<h3>bool public initialized = false;</h3>
+<p>Internally tracks deployment under eip-1167 proxy pattern</p>
+<h3>address public tokenAddress;</h3>
+<p>The token address managed by the DAO that tracks the internal transfers</p>
+<h3>string public tokenName;</h3>
+<p>The name of the token managed by the DAO</p>
+<h3>string public tokenSymbol;</h3>
+<p>The symbol of the token managed by the DAO</p>
+<h3>uint8 public tokenDecimals;</h3>
+<p>The number of decimals of the token managed by the DAO. The default number of decimals is 0 in <code>utils/DeploymentUtils.js.</code> It is set to 0, because then the number of Units issued by the Bank Extension is tracked on a 1:1 basis with the number of tokens. For example, in the DAO issues 1 Unit to a member, then the display in a wallet such as MetaMask will be equal &quot;1&quot; Token. Otherwise, if the default was to the standard 18 decimals, then it would display in MetaMask as &quot;0.000000000000000001&quot; Token.</p>
+<h3>mapping(address =&gt; mapping(address =&gt; uint256)) private _allowances;</h3>
+<p>Tracks all the token allowances: owner =&gt; spender =&gt; amount</p>
+<h4>Access Flags</h4>
+<ul>
+<li><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/extensions/Bank.md">Bank</a>:
+<ul>
+<li><code>INTERNAL_TRANSFER: true</code>:</li>
+</ul>
+</li>
+<li><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/core/DaoRegistry.md">DAO</a>:
+<ul>
+<li><code>NEW_MEMBER: true</code></li>
+</ul>
+</li>
+</ul>
+<p>Access Control Layer Flags - explicitly grant the extension permissions to change the bank and dao states.</p>
+<h2>Extension functions</h2>
+<h3>function initialize</h3>
+<pre><code class="language-solidity">/**
+  * @notice Initializes the extension with the DAO that it belongs to,
+  * and checks if the parameters were set.
+  * @param _dao The address of the DAO that owns the extension.
+  * @param creator The owner of the DAO and Extension that is also a member of the DAO.
+  */
+function initialize(DaoRegistry _dao, address creator) external override
+</code></pre>
+<h3>function token</h3>
+<pre><code class="language-solidity">/**
+  * @dev Returns the token address managed by the DAO that tracks the
+  * internal transfers.
+  */
+function token() public view virtual returns (address)
+</code></pre>
+<h3>function setToken</h3>
+<pre><code class="language-solidity">/**
+  * @dev Sets the token address if the extension is not initialized,
+  * not reserved and not zero.
+  */
+function setToken(address _tokenAddress) external
+</code></pre>
+<h3>function name</h3>
+<pre><code class="language-solidity">/**
+  * @dev Returns the name of the token.
+  */
+function name() public view virtual returns (string memory)
+</code></pre>
+<h3>function setName</h3>
+<pre><code class="language-solidity">/**
+  * @dev Sets the name of the token if the extension is not initialized.
+  */
+function setName(string memory _name) external
+</code></pre>
+<h3>function symbol</h3>
+<pre><code class="language-solidity">/**
+  * @dev Returns the symbol of the token, usually a shorter version of the
+  * name.
+  */
+function symbol() public view virtual returns (string memory)
+</code></pre>
+<h3>function setSymbol</h3>
+<pre><code class="language-solidity">/**
+  * @dev Sets the token symbol if the extension is not initialized.
+  */
+function setSymbol(string memory _symbol) external
+</code></pre>
+<h3>function decimals</h3>
+<pre><code class="language-solidity">/**
+  * @dev Returns the number of decimals used to get its user representation.
+  * For example, if `decimals` equals `2`, a balance of `505` tokens should
+  * be displayed to a user as `5,05` (`505 / 10 ** 2`).
+  */
+function decimals() public view virtual returns (uint8)
+</code></pre>
+<h3>function setDecimals</h3>
+<pre><code class="language-solidity">/**
+  * @dev Sets the token decimals if the extension is not initialized.
+  */
+function setDecimals(uint8 _decimals) external
+</code></pre>
+<h3>function totalSupply</h3>
+<pre><code class="language-solidity">/**
+  * @dev Returns the amount of tokens in existence.
+  */
+function totalSupply() public view override returns (uint256)
+</code></pre>
+<h3>function balanceOf</h3>
+<pre><code class="language-solidity">/**
+  * @dev Returns the amount of tokens owned by `account`.
+  */
+function balanceOf(address account) public view override returns (uint256)
+</code></pre>
+<h3>function allowance</h3>
+<pre><code class="language-solidity">/**
+  * @dev Returns the remaining number of tokens that `spender` will be
+  * allowed to spend on behalf of `owner` through {transferFrom}. This is
+  * zero by default.
+  *
+  * This value changes when {approve} or {transferFrom} are called.
+  */
+function allowance(address owner, address spender)
+    public
+    view
+    override
+    returns (uint256)
+</code></pre>
+<h3>function approve</h3>
+<pre><code class="language-solidity">/**
+  * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
+  * @param spender The address account that will have the units decremented.
+  * @param amount The amount to decrement from the spender account.
+  * @return a boolean value indicating whether the operation succeeded.
+  *
+  * Emits an {Approval} event.
+  */
+function approve(address spender, uint256 amount)
+    public
+    override
+    reentrancyGuard(dao)
+    returns (bool)
+</code></pre>
+<h3>function transfer</h3>
+<pre><code class="language-solidity">/**
+  * @dev Moves `amount` tokens from the caller's account to `recipient`.
+  * @dev The transfer operation follows the DAO configuration specified
+  * by the ERC20_EXT_TRANSFER_TYPE property.
+  * @param recipient The address account that will have the units incremented.
+  * @param amount The amount to increment in the recipient account.
+  * @return a boolean value indicating whether the operation succeeded.
+  *
+  * Emits a {Transfer} event.
+  */
+function transfer(address recipient, uint256 amount)
+    public
+    override
+    reentrancyGuard(dao)
+    returns (bool)
+</code></pre>
+<h3>function transferFrom</h3>
+<pre><code class="language-solidity">/**
+  * @dev Moves `amount` tokens from `sender` to `recipient` using the
+  * allowance mechanism. `amount` is then deducted from the caller's
+  * allowance.
+  * @dev The transfer operation follows the DAO configuration specified
+  * by the ERC20_EXT_TRANSFER_TYPE property.
+  * @param sender The address account that will have the units decremented.
+  * @param recipient The address account that will have the units incremented.
+  * @param amount The amount to decrement from the sender account.
+  * @return a boolean value indicating whether the operation succeeded.
+  *
+  * Emits a {Transfer} event.
+  */
+function transferFrom(
+    address sender,
+    address recipient,
+    uint256 amount
+) public override reentrancyGuard(dao) returns (bool)
+</code></pre>
+<h2>Events</h2>
+<ul>
+<li><code>Approval</code>: when the sender approves a spender to transfer a certain amount.</li>
+<li><code>Transfer</code>: when the transfer happens between DAO members and/or external accounts.</li>
+</ul>

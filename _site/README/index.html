@@ -1,0 +1,141 @@
+<p><a href="https://codecov.io/gh/openlawteam/tribute-contracts"><img src="https://codecov.io/gh/openlawteam/tribute-contracts/branch/master/graph/badge.svg?token=XZRL9RUYZE" alt="codecov"></a></p>
+<h2>Contents</h2>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#Usage">Usage</a></li>
+<li><a href="#contribute">Contribute</a></li>
+<li><a href="https://github.com/openlawteam/tribute-contracts/tree/master/subgraph/README.md">Subgraph</a></li>
+</ul>
+<h2>Overview</h2>
+<p>At the LAO, we realized that even though Moloch is very useful and powerful, it has many features that are not necessary for all DAOs. There are also a few features that are missing and are difficult to add.</p>
+<p>This is why we would like to introduce a more modular approach to Moloch architecture, which will give us:</p>
+<ul>
+<li>Simpler code - each module is responsible for only one function which reduces coupling and makes the system easier to understand.</li>
+<li>Adaptability - each part of the DAO can be adapted to the needs of a particular DAO without the need to audit the entire code base every time.</li>
+<li>Upgradability - modules can be easily upgraded as necessary. For example, as the voting process evolves over time the module responsible for managing the voting process can be upgraded without changing any other modules or the Core Contract. Modules can also be used by multiple DAOs without the need to be redeployed.</li>
+</ul>
+<p>Inspired by the <a href="https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)">hexagonal architecture design pattern</a> we believe that we can have additional layers of security, and break the main contract into smaller contracts. With that, we create loosely coupled modules/contracts, easier to audit, and can be easily connected to the DAO.</p>
+<h3>Architecture</h3>
+<p><img src="https://user-images.githubusercontent.com/708579/107689684-e7300200-6c87-11eb-89c0-7bfe7eddaaaf.png" alt="laoland_hexagon_architecture"></p>
+<p>The main design goal is to limit access to the smart contracts according at layer boundaries. The External World (i.e. RPC clients) can access the core contracts only via Adapters, never directly. Every adapter contains all the necessary logic and data to update/change the state of the DAO in the DAORegistry Contract. The Core Contract tracks all the state changes of the DAO, and an Adapter tracks only the state changes in its own context. Extensions enhance the DAO capabilities and simplify the Core Contract code. The information always flows from the External World to the Core Contracts, never the other way around. If a Core Contract needs external info, it must be provided by an Adapter and/or an Extension instead of calling External World directly.</p>
+<p>There are five main components in the Tribute architecture:</p>
+<h4>External World</h4>
+<p>The external world is essentially anything that interacts with the DAO. An example of that are RPC clients that are responsible for calling the Adapters public/external functions to pull/push data to the DAO Core Contracts and its Extensions.</p>
+<h4>Adapters</h4>
+<p>Adapters are well-defined, tested and extensible smart contracts that are created with a unique purpose. One Adapter is responsible for performing one or a set of tasks in a given context. With this approach we can develop adapters targeting specific use-cases, and update the DAO configurations to use these new adapters.</p>
+<p>When a new adapter is created, one needs to submit a Managing proposal to add the new adapter to the DAO. Once the proposal passes, the new adapter is added and becomes available for use.</p>
+<p>Each adapter needs to be configured with the <a href="#access-control-layer">Access Flags</a> in order to access the <a href="#core-contracts">Core Contracts</a>, and/or <a href="#extensions">Extensions</a>. Otherwise the Adapter will not able to pull/push information to/from the DAO.</p>
+<p>Adapters implemented in the Tribute project:</p>
+<ul>
+<li><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Configuration.md">Configuration</a>: manages storing and retrieving per-DAO settings required by shared adapters.</li>
+<li><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Distribute.md">Distribute</a>: allows the members to distribute funds to one or all members of the DAO.</li>
+<li><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Financing.md">Financing</a>: allows individuals and/or organizations to request funds to finance their projects, and the members of the DAO have the power to vote and decide which projects should be funded.</li>
+<li><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/GuildKick.md">GuildKick</a>: gives the members the freedom to choose which individuals or organizations should really be part of the DAO.</li>
+<li><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Managing.md">Managing</a>: enhances the DAO capabilities by adding/updating the DAO Adapters through a voting process.</li>
+<li><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/OffchainVoting.md">OffchainVoting</a>: adds the offchain voting governance process to the DAO to support gasless voting.</li>
+<li><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Onboarding.md">Onboarding</a>: triggers the process of minting internal tokens in exchange of a specific token at a fixed price.</li>
+<li><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Ragequit.md">Ragequit</a>: gives the members the freedom to choose when it is the best time to exit the DAO for any given reason.</li>
+<li><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Tribute.md">Tribute</a>: allows potential and existing DAO members to contribute any amount of ERC-20 tokens to the DAO in exchange for any amount of DAO internal tokens.</li>
+<li><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/TributeNFT.md">TributeNFT</a>: allows potential DAO members to contribute a registered ERC-721 asset to the DAO in exchange for any amount of DAO units.</li>
+<li><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Voting.md">Voting</a>: adds the simple on chain voting governance process to the DAO.</li>
+<li><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Withdraw.md">Withdraw</a>: allows the members to withdraw their funds from the DAO bank.</li>
+</ul>
+<p>Considerations:</p>
+<ul>
+<li>Adapters do not keep track of the state of the DAO. An adapter might use storage to control its own state, but ideally any DAO state change must be propagated to the DAORegistry Core Contract.</li>
+<li>Adapters just execute smart contract logic that changes the state of the DAO by calling the DAORegistry. They also can compose complex calls that interact with External World, other Adapters or even Extensions, to pull/push additional information.</li>
+<li>The adapter must follow the rules defined by the <a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Template.md">Template Adapter</a>.</li>
+<li>If you want to contribute and create an Adapter, please checkout this: <a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/HowToCreate.md">How to create an Adapter</a>.</li>
+</ul>
+<h4>Extensions</h4>
+<p>Extensions are conceived to isolate the complexity of state changes from the DAORegistry contract, and to simplify the core logic. Essentially an Extension is similar to an Adapter, but the main difference is that it is used by several adapters and by the DAORegistry - which end up enhancing the DAO capabilities and the state management without cluttering the DAO core contract.</p>
+<ul>
+<li>
+<p><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/extensions/Bank.md">Bank</a>: adds the banking capabilities to the DAO, and keeps track of the DAO accounts and internal token balances.</p>
+</li>
+<li>
+<p><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/extensions/NFT.md">NFT</a>: adds to the DAO the capability of managing and curate a collection of standard NFTs.</p>
+</li>
+<li>
+<p><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/extensions/ERC20.md">ERC20</a>: adds to the DAO the capability of managing and transfer internal tokens between members and/or external accounts.</p>
+</li>
+</ul>
+<h4>Core Contracts</h4>
+<p>A core contract is a contract that composes the DAO itself, and directly changes the DAO state without the need of going through an Adapter. Ideally a core contract shall never pull information directly from the external world. For that we use Adapters and Extensions, and the natural information flow is always from the external world to the core contracts.</p>
+<ul>
+<li><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/core/DaoRegistry.md">DaoRegistry</a>: tracks the state changes of the DAO, only adapters with proper <a href="#access-control-layer">Access Flags</a> can alter the DAO state.</li>
+<li>CloneFactory: creates a clone of the DAO based on its address.</li>
+<li><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/core/DaoFactory.md">DaoFactory</a>: creates, initializes, and adds adapter configurations to the new DAO, and uses the CloneFactory to reduce the DAO creation transaction costs.</li>
+<li>DaoConstants: defines all the constants used by the DAO contracts, and implements some helper functions to manage the Access Flags.</li>
+</ul>
+<h4>Access Control Layer</h4>
+<p>The Access Control Layer (ACL) is implemented using Access Flags to indicate which permissions an adapter must have in order to access and modify the DAO state. The are 3 main categories of <a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/core/DaoRegistry.md#access-flags">Access Flags</a>:</p>
+<ul>
+<li>MemberFlag: <code>EXISTS</code>.</li>
+<li>ProposalFlag: <code>EXISTS</code>, <code>SPONSORED</code>, <code>PROCESSED</code>.</li>
+<li>AclFlag: <code>REPLACE_ADAPTER</code>, <code>SUBMIT_PROPOSAL</code>, <code>UPDATE_DELEGATE_KEY</code>, <code>SET_CONFIGURATION</code>, <code>ADD_EXTENSION</code>, <code>REMOVE_EXTENSION</code>, <code>NEW_MEMBER</code>.</li>
+</ul>
+<p>The Access Flags of each adapter must be provided to the DAOFactory when the <code>daoFactory.addAdapters</code> function is called passing the new adapters. These flags will grant the access to the DAORegistry contract, and the same process must be done to grant the access of each Adapter to each Extension (function <code>daoFactory.configureExtension</code>).</p>
+<p>The Access Flags are defined in the DAORegistry using the modifier <code>hasAccess</code>. For example, a function with the modifier <code>hasAccess(this, AclFlag.REPLACE_ADAPTER)</code> means the adapter calling this function needs to have the Access Flag <code>REPLACE_ADAPTER</code> enabled, otherwise the call will revert. In order to create an Adapter with the proper Access Flags one needs to first map out all the functions that the Adapter will be calling in the DAORegistry and Extensions, and provide these Access Flags using the DAO Factory as described above.</p>
+<p>You can find more information about the purpose of each access flag at <a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/core/DaoRegistry.md#access-flags">DAO Registry - Access Flags</a>.</p>
+<h2>Usage</h2>
+<h3>Environment Variables</h3>
+<p>Added the following environment variables to your local .env file:</p>
+<ul>
+<li><code>DAO_NAME</code>: The name of the DAO.</li>
+<li><code>DAO_OWNER_ADDR</code>: The DAO Owner ETH Address (0x...) in the target network.</li>
+<li><code>INFURA_KEY</code>: The Infura API Key is used to communicate with the Ethereum blockchain.</li>
+<li><code>TRUFFLE_MNEMONIC</code>: The truffle mnemonic string containing the 12 keywords.</li>
+<li><code>ETHERSCAN_API_KEY</code>: The Ether Scan API Key to verify the contracts after the deployment.</li>
+<li><code>DEBUG_CONTRACT_VERIFICATION</code>: Debug the Ether Scan contract verification calls (<code>true</code>|<code>false</code>).</li>
+<li><code>COUPON_CREATOR_ADDR</code>: The public eth (0x...) address of the creator of the onboarding coupons.</li>
+<li><code>ERC20_TOKEN_NAME</code>: The ERC20 Token Name used by the ERC20 Token Extension.</li>
+<li><code>ERC20_TOKEN_SYMBOL</code>: Token Symbol used by the ERC20 Token Extension.</li>
+<li><code>ERC20_TOKEN_DECIMALS</code>: The ERC20 Token Decimals to display in MetaMask.</li>
+</ul>
+<p>Checkout the <a href="https://github.com/openlawteam/tribute-contracts/.sample.env">sample .env file</a>.</p>
+<p><strong>Required env vars per deployment type</strong></p>
+<ul>
+<li>
+<p>Ganache deployment: <code>DAO_NAME</code>, <code>ERC20_TOKEN_NAME</code>, <code>ERC20_TOKEN_SYMBOL</code>, <code>ERC20_TOKEN_DECIMALS</code>, <code>COUPON_CREATOR_ADDR</code>.</p>
+</li>
+<li>
+<p>Rinkeby deployment: <code>DAO_NAME</code>, <code>DAO_OWNER_ADDR</code>, <code>ERC20_TOKEN_NAME</code>, <code>ERC20_TOKEN_SYMBOL</code>, <code>ERC20_TOKEN_DECIMALS</code>, <code>COUPON_CREATOR_ADDR</code>.</p>
+</li>
+<li>
+<p>Test deployment: <code>DAO_NAME</code>, <code>ERC20_TOKEN_NAME</code>, <code>ERC20_TOKEN_SYMBOL</code>, <code>ERC20_TOKEN_DECIMALS</code>.</p>
+</li>
+</ul>
+<h3>Run Tests</h3>
+<p>This project uses truffle. To run the tests, simply run:</p>
+<blockquote>
+<p>npm run test</p>
+</blockquote>
+<h3>Code Format</h3>
+<p>To fix the Solidity code and documentation with the linter hints, simply run:</p>
+<blockquote>
+<p>npm run lint:fix</p>
+</blockquote>
+<h3>Running with Ganache</h3>
+<p>...</p>
+<blockquote>
+<p>npm run ganache</p>
+</blockquote>
+<h3>Deploying the contracts</h3>
+<blockquote>
+<p>npm run deploy:ganache</p>
+</blockquote>
+<p>or</p>
+<blockquote>
+<p>npm run deploy:rinkeby</p>
+</blockquote>
+<h3>Verifying Contracts</h3>
+<p>To verify the contract using Etherscan you need to create an API key and update the .env file with your API key.
+Then execute the following script:</p>
+<blockquote>
+<p>npm run verify rinkeby</p>
+</blockquote>
+<h2>Contribute</h2>
+<p>Tribute exists thanks to its contributors. There are many ways you can participate and help build high quality software. Check out the <a href="CONTRIBUTING.md">contribution guide</a>!</p>
+<h2>License</h2>
+<p>Tribute is released under the <a href="LICENSE">MIT License</a>.</p>

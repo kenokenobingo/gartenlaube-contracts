@@ -1,0 +1,158 @@
+<h2>Extension description and scope</h2>
+<p>An <a href="https://docs.openzeppelin.com/contracts/3.x/api/token/erc721#IERC721Receiver">IERC721Receiver</a> contract safely manages the collection of standard NFTs (ERC721) collected by the DAO.</p>
+<p>The extension adds to the DAO the capability of managing and curating a collection of standard NFTs. Applicants can join the DAO offering NFTs as tributes, and if their proposal is approved their tributes get stored in the guild NFT collection - which supports tokens in ERC721 standard.</p>
+<p>In order to join the DAO using a NFT as tribute, the DAO must have the <a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/TributeNFT.md">TributeNFT Adapter</a> pre-configured with the correct <a href="#access-flags">Access Flags</a>.</p>
+<h2>Extension state</h2>
+<h4>bool public initialized = false;</h4>
+<p>Internally tracks deployment under eip-1167 proxy pattern.</p>
+<h4>DaoRegistry public dao;</h4>
+<p>Keeps track of each DAO instance the current contract belongs to.</p>
+<h4>Access Flags</h4>
+<ul>
+<li><code>COLLECT_NFT</code>: Allows the caller adapter to transfer the NFT to the GUILD collection.</li>
+<li><code>WITHDRAW_NFT</code>: Allows the caller to remove the NFT from the GUILD collection and return it to a new owner.</li>
+<li><code>INTERNAL_TRANSFER</code>: Allows the caller to update the internal ownership of the NFT within the GUILD collection.</li>
+</ul>
+<p>Access Control Layer Flags - explicitly grant external call permissions to change the extension state.</p>
+<h4>mapping(address =&gt; EnumerableSet.UintSet) private _nfts;</h4>
+<p>Tracks all the Token IDs that belong to an NFT address stored in the GUILD collection.</p>
+<h4>mapping(bytes32 =&gt; address) private _ownership;</h4>
+<p>Tracks the internal owner of record of an NFT that has been transferred to the extension.</p>
+<h4>EnumerableSet.AddressSet private _nftAddresses;</h4>
+<p>Tracks all the NFTs addresses collected and stored in the GUILD collection.</p>
+<h2>Extension functions</h2>
+<h3>function initialize</h3>
+<pre><code class="language-solidity">/**
+  * @notice Initializes the extension with the DAO address that it belongs to.
+  * @param _dao The address of the DAO that owns the extension.
+  * @param creator The owner of the DAO and Extension that is also a member of the DAO.
+  */
+function initialize(DaoRegistry _dao, address creator) external
+</code></pre>
+<h3>function collect</h3>
+<pre><code class="language-solitidy">/**
+  * @notice Collects the NFT from the owner and moves it to the NFT extension.
+  * @notice It must be have been allowed to move this token by either {approve} or {setApprovalForAll}.
+  * @notice The caller must have the ACL Flag: COLLECT_NFT
+  * @dev Reverts if the NFT is not in ERC721 standard.
+  * @param nftAddr The NFT contract address.
+  * @param nftTokenId The NFT token id.
+  */
+function collect(
+    address nftAddr,
+    uint256 nftTokenId
+) external
+</code></pre>
+<h3>function withdrawNFT</h3>
+<pre><code class="language-solidity">/**
+  * @notice Ttransfers the NFT token from the extension address to the new owner.
+  * @notice It also updates the internal state to keep track of the all the NFTs collected by the extension.
+  * @notice The caller must have the ACL Flag: WITHDRAW_NFT
+  * @dev Reverts if the NFT is not in ERC721 standard.
+  * @param newOwner The address of the new owner.
+  * @param nftAddr The NFT address that must be in ERC721 standard.
+  * @param nftTokenId The NFT token id.
+  */
+function withdrawNFT(
+    address newOwner,
+    address nftAddr,
+    uint256 nftTokenId
+) public hasExtensionAccess(this, AclFlag.WITHDRAW_NFT)
+</code></pre>
+<h3>function internalTransfer</h3>
+<pre><code class="language-solidity">/**
+  * @notice Updates internally the ownership of the NFT.
+  * @notice The caller must have the ACL Flag: INTERNAL_TRANSFER
+  * @dev Reverts if the NFT is not already internally owned in the extension.
+  * @param nftAddr The NFT address.
+  * @param nftTokenId The NFT token id.
+  * @param newOwner The address of the new owner.
+  */
+function transferFrom(
+    address escrowAddr,
+    address nftAddr,
+    address newOwner
+) public hasExtensionAccess(this, AclFlag.INTERNAL_TRANSFER)
+</code></pre>
+<h3>function getNFTId</h3>
+<pre><code class="language-solidity">/**
+  * @notice Gets ID generated from an NFT address and token id (used internally to map ownership).
+  * @param nftAddress The NFT address.
+  * @param tokenId The NFT token id.
+  */
+function getNFTId(address nftAddress, uint256 tokenId)
+    public
+    pure
+    returns (bytes32)
+</code></pre>
+<h3>function nbNFTs</h3>
+<pre><code class="language-solidity">/**
+  * @notice Returns the total amount of token ids collected for an NFT address.
+  */
+function nbNFTs(address tokenAddr) public view returns (uint256)
+</code></pre>
+<h3>function getNFT</h3>
+<pre><code class="language-solidity">/**
+  * @notice Returns token id associated with an NFT address stored in the GUILD collection at the specified index.
+  * @param tokenAddr The NFT address.
+  * @param index The index to get the token id if it exists.
+  */
+function getNFT(address tokenAddr, uint256 index)
+    public
+    view
+    returns (uint256)
+</code></pre>
+<h3>function nbNFTAddresses</h3>
+<pre><code class="language-solidity">/**
+  * @notice Returns the total amount of NFT addresses collected.
+  */
+function nbNFTAddresses() external view returns (uint256)
+</code></pre>
+<h3>function getNFTAddress</h3>
+<pre><code class="language-solidity">/**
+  * @notice Returns NFT address stored in the GUILD collection at the specified index.
+  * @param index The index to get the NFT address if it exists.
+  */
+function getNFTAddress(uint256 index) external view returns (address)
+</code></pre>
+<h3>function getNFTOwner</h3>
+<pre><code class="language-solidity">/**
+  * @notice Returns owner of NFT that has been transferred to the extension.
+  * @param nftAddress The NFT address.
+  * @param tokenId The NFT token id.
+  */
+function getNFTOwner(address nftAddress, uint256 tokenId)
+    public
+    view
+    returns (address)
+</code></pre>
+<h3>function onERC721Received</h3>
+<pre><code class="language-solidity">/**
+  * @notice Required function from IERC721 standard to be able to receive assets to this contract address.
+  */
+function onERC721Received(
+    address,
+    address,
+    uint256,
+    bytes calldata
+) external pure override returns (bytes4)
+</code></pre>
+<h3>function _saveNft</h3>
+<pre><code class="language-solidity">/**
+  * @notice Helper function to update the extension states for an NFT collected by the extension.
+  * @param nftAddr The NFT address.
+  * @param nftTokenId The token id.
+  * @param owner The address of the owner.
+  */
+function _saveNft(
+    address nftAddr,
+    uint256 nftTokenId,
+    address owner
+) private
+</code></pre>
+<h2>Events</h2>
+<ul>
+<li><code>CollectedNFT</code>: when a NFT is collected/stored into the NFT collection.</li>
+<li><code>WithdrawnNFT</code>: when a NFT is transferred from the extension to another owner.</li>
+<li><code>TransferredNFT</code>: when a NFT is transferred from the escrow adapter to the NFT collection in the extension.</li>
+</ul>

@@ -85,6 +85,46 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         return sender;
     }
 
+    function delegateVote(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        address to
+    ) external onlyMember(dao) {
+        require(
+            dao.getProposalFlag(proposalId, DaoRegistry.ProposalFlag.SPONSORED),
+            "the proposal has not been sponsored yet"
+        );
+
+        require(
+            !dao.getProposalFlag(
+                proposalId,
+                DaoRegistry.ProposalFlag.PROCESSED
+            ),
+            "the proposal has already been processed"
+        );
+
+        require(
+            voteValue < 3 && voteValue > 0,
+            "only yes (1) and no (2) are possible values"
+        );
+
+        Voting storage vote = votes[address(dao)][proposalId];
+
+        require(
+            vote.startingTime > 0,
+            "this proposalId has no vote going on at the moment"
+        );
+        require(
+            block.timestamp <
+                vote.startingTime + dao.getConfiguration(VotingPeriod),
+            "vote has already ended"
+        );
+
+        require(vote.votes[memberAddr] == 0, "member has already voted");
+
+        vote.votes[memberAddr] = 3;
+    }
+
     function submitVote(
         DaoRegistry dao,
         bytes32 proposalId,

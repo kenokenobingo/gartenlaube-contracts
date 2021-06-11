@@ -1,0 +1,119 @@
+<h2>Adapter description and scope</h2>
+<p>Ragequit is the process in which a member of the DAO decides to opt out of the DAO for any given reason.</p>
+<p>This implementation of ragequit adapter does not cover the case in which the member is put in jail before updating the internal balance - as it happens in Moloch V2 to disincentivize the behavior in which members vote Yes on proposals that are essentially bad for the future of the DAO, and right after that they quit with their funds.</p>
+<p>It also does not check if the member has voted Yes on a proposal that is not processed yet, and does not keep track of the latest proposal that was voted Yes on.</p>
+<p>The main goal is to give the members the freedom to choose when it is the best time to withdraw their funds without any additional preconditions, except for the fact that they need to have enough units to be converted to funds. Members do not need to convert all their units/loot at once.</p>
+<h2>Adapter workflow</h2>
+<p>In order to opt out of the DAO, the member needs to indicate the amount of units and/or loots that the member has decided to burn (to convert back into a token value).</p>
+<p>The proportional units and/or loots are burned when the member provides the tokens in which one expects to receive the funds. The funds are deducted from the internal DAO bank balance, and added to the member's internal balance.</p>
+<p>If the member provides at least one invalid token, e.g: a token that is not supported/allowed by the DAO, the entire ragequit process is canceled/reverted. By default the adapter expects that the token array is sorted in ascending order. This is done to test for duplicates, and each token needs to be smaller than the next one, otherwise the transaction is reverted.
+In addition to that, if the member provides a long list of tokens that may cause issues due to the block size limit, it is expected that the transaction returns a failure, so it can be retried in another run with a fewer tokens.</p>
+<p>Once the ragequit process is completed, the funds are deducted from the bank, added to the member's internal balance, and an event called <code>MemberRagequit</code> is emitted.</p>
+<h2>Adapter configuration</h2>
+<p>Tokens that are provided by the member have to be allowed/supported by the DAO.</p>
+<p>The member/advisor needs to have enough units and/or loot in order to convert it to funds.</p>
+<p>DAORegistry Access Flags:</p>
+<p>Bank Extension Access Flags: <code>WITHDRAW</code>, <code>INTERNAL_TRANSFER</code>, <code>SUB_FROM_BALANCE</code>, <code>ADD_TO_BALANCE</code>.</p>
+<h2>Adapter state</h2>
+<p>There is no state tracking for this adapter.</p>
+<h2>Dependencies and interactions (internal / external)</h2>
+<ul>
+<li>
+<p>BankExtension</p>
+<ul>
+<li>checks the member's balance.</li>
+<li>subtracts the member's balance.</li>
+<li>transfers the funds from the DAO account to the member's account taking into consideration the provided tokens.</li>
+<li>checks if the provided token is supported/allowed by the DAO.</li>
+</ul>
+</li>
+<li>
+<p>DaoRegistry</p>
+<ul>
+<li>checks if the message sender is actually a member or an advisor of the DAO.</li>
+</ul>
+</li>
+<li>
+<p>FairShareHelper</p>
+<ul>
+<li>calculates the amount of funds to be returned to the member based on the provided numbers of units and/or loot, and current balance of the Guild.</li>
+</ul>
+</li>
+</ul>
+<h2>Functions description and assumptions / checks</h2>
+<h3>receive() external payable</h3>
+<pre><code class="language-solidity">    /**
+     * @notice default fallback function to prevent from sending ether to the contract.
+     */
+    receive() external payable
+</code></pre>
+<h3>function ragequit</h3>
+<pre><code class="language-solidity">    /**
+     * @notice Allows a member or advisor of the DAO to opt out by burning the proportional amount of units/loot of the member.
+     * @notice Anyone is allowed to call this function, but only members and advisors that have units are able to execute the entire ragequit process.
+     * @notice The array of token needs to be sorted in ascending order before executing this call, otherwise the transaction will fail.
+     * @dev The sum of unitsToBurn and lootToBurn have to be greater than zero.
+     * @dev The member becomes an inactive member of the DAO once all the units/loot are burned.
+     * @dev If the member provides an invalid/not allowed token, the entire processed is reverted.
+     * @dev If no tokens are informed, the transaction is reverted.
+     * @param dao The dao address that the member is part of.
+     * @param unitsToBurn The amount of units of the member that must be converted into funds.
+     * @param lootToBurn The amount of loot of the member that must be converted into funds.
+     * @param tokens The array of tokens that the funds should be sent to.
+     */
+    function ragequit(
+        DaoRegistry dao,
+        uint256 unitsToBurn,
+        uint256 lootToBurn,
+        address[] memory tokens
+    ) external
+</code></pre>
+<h3>function _prepareRagequit</h3>
+<pre><code class="language-solidity">    /**
+     * @notice Subtracts from the internal member's account the proportional units and/or loot.
+     * @param memberAddr The member address that wants to burn the units and/or loot.
+     * @param unitsToBurn The amount of units of the member that must be converted into funds.
+     * @param lootToBurn The amount of loot of the member that must be converted into funds.
+     * @param tokens The array of tokens that the funds should be sent to.
+     * @param bank The bank extension.
+     */
+    function _prepareRagequit(
+        address memberAddr,
+        uint256 unitsToBurn,
+        uint256 lootToBurn,
+        address[] calldata tokens,
+        BankExtension bank
+    ) internal
+</code></pre>
+<h3>function _burnUnits</h3>
+<pre><code class="language-solidity">    /**
+     * @notice Subtracts from the bank's account the proportional units and/or loot,
+     * @notice and transfers the funds to the member's internal account based on the provided tokens.
+     * @param memberAddr The member address that wants to burn the units and/or loot.
+     * @param unitsToBurn The amount of units of the member that must be converted into funds.
+     * @param lootToBurn The amount of loot of the member that must be converted into funds.
+     * @param initialTotalUnitsAndLoot The sum of units and loot before internal transfers.
+     * @param tokens The array of tokens that the funds should be sent to.
+     * @param bank The bank extension.
+     */
+    function _burnUnits(
+        address memberAddr,
+        uint256 unitsToBurn,
+        uint256 lootToBurn,
+        uint256 initialTotalUnitsAndLoot,
+        address[] memory tokens,
+        BankExtension bank
+    ) internal
+</code></pre>
+<h2>Events</h2>
+<h3>event MemberRagequit</h3>
+<pre><code class="language-solidity">    /**
+     * @notice Event emitted when a member of the DAO executes a ragequit
+     * with all or parts of the member's units/loot.
+     */
+    event MemberRagequit(
+        address memberAddr,
+        uint256 burnedUnits,
+        uint256 burnedLoot,
+        uint256 initialTotalUnitsAndLoot)
+</code></pre>

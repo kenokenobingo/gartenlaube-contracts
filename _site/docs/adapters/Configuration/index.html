@@ -1,0 +1,46 @@
+<h2>Adapter description and scope</h2>
+<p>The Configuration adapter manages storing and retrieving per-DAO settings required by shared adapters.</p>
+<p>Some adapters have configurable settings which must be stored for each DAO instance that uses the shared adapter.</p>
+<h2>Workflows</h2>
+<p>Submit proposal</p>
+<ul>
+<li>check that caller is valid member</li>
+<li>check that keys/values are same length</li>
+<li>check that proposalId is unique</li>
+<li>submit proposal to DAO</li>
+<li>create and store configuration structure</li>
+</ul>
+<p>Sponsor module change request</p>
+<ul>
+<li>check that caller is valid member</li>
+<li>initiate vote</li>
+</ul>
+<p>Process proposal</p>
+<ul>
+<li>check that caller is valid member</li>
+<li>check that proposalId exists</li>
+<li>check that proposal passed</li>
+<li>for each key and value, set it in the configuration for this DAO</li>
+<li>process proposal</li>
+</ul>
+<h2>Adapter state</h2>
+<p>The adapter stores the proposed configuration changes.</p>
+<h3>Configuration</h3>
+<p>DAORegistry Access Flags: <code>SUBMIT_PROPOSAL</code>, <code>SET_CONFIGURATION</code>.</p>
+<h4>keys</h4>
+<p>The array of keys to set in the configuration.</p>
+<h4>values</h4>
+<p>The array of values to set in the configuration.</p>
+<h2>Dependencies and interactions (internal / external)</h2>
+<h2>Functions description and assumptions / checks</h2>
+<h3>function submitProposal(DaoRegistry dao, bytes32 proposalId, bytes32[] calldata keys, uint256[] calldata values, bytes calldata data)</h3>
+<p>Creates and sponsors a new configuration proposal on behalf of the member calling the function.</p>
+<p><strong>dao</strong> is the DAO instance to be configured
+<strong>proposalId</strong> is the ID chosen for this configuration proposal, must be unique
+<strong>keys</strong> the configuration keys to set
+<strong>values</strong> the configuration values to set, must be same length as keys
+<strong>data</strong></p>
+<h3>function processProposal(DaoRegistry dao, bytes32 proposalId)</h3>
+<p>Processes a previously created configuration proposal by applying the configuration to the DAO.</p>
+<p><strong>dao</strong> is the DAO instance to be configured
+<strong>proposalId</strong> is the ID of a previously created and sponsored configuration proposal which has passed the vote</p>

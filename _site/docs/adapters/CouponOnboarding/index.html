@@ -1,0 +1,41 @@
+<h2>Adapter description and scope</h2>
+<p>The CouponOnboarding adapter provides a way to onboard an initial group of members quickly without requiring multiple proposals.</p>
+<p>The DAO creator can produce and sign coupons which allow redemption of a particular number of units by a given address. When the coupon is redeemed
+the units are directly issued to the new member.</p>
+<h2>Adapter workflow</h2>
+<p>Redeem coupon request</p>
+<ul>
+<li>check that the coupon has not already been redeemed</li>
+<li>check that the signed hash matches the hash of the redeem arguments</li>
+<li>check that the signer of the coupon matches the configured signer</li>
+<li>mint the configured tokens to the new member</li>
+<li>mark the coupon redeemed</li>
+</ul>
+<h2>Adapter configuration</h2>
+<p>DAORegistry Access Flags: <code>NEW_MEMBER</code>.</p>
+<p>Bank Extension Access Flags: <code>ADD_TO_BALANCE</code>.</p>
+<h3>signerAddress</h3>
+<p>The public address of the signer key used to generate coupons for this adapter.</p>
+<h3>tokenAddrToMint</h3>
+<p>The address of the token that will be created and issued to the address in the redeemed coupons.</p>
+<h2>Adapter state</h2>
+<h3>Coupon</h3>
+<p>The coupon structure contains the data fields necessary to redeem and add a new member.</p>
+<h4>authorizedMember</h4>
+<p>The address that this coupon authorized to become a new member.</p>
+<h4>amount</h4>
+<p>The amount of units that this member will receive.</p>
+<h4>nonce</h4>
+<p>A unique identifier for this coupon request.</p>
+<h2>Dependencies and interactions (internal / external)</h2>
+<h2>Functions description and assumptions / checks</h2>
+<h3>function hashCouponMessage(DaoRegistry dao, Coupon memory coupon) public view returns (bytes32)</h3>
+<p>Hashes the provided coupon as an ERC712 hash.</p>
+<p><strong>dao</strong> is the DAO instance to be configured
+<strong>coupon</strong> is the coupon to hash</p>
+<h3>function redeemCoupon(DaoRegistry dao, address authorizedMember, uint256 amount, uint256 nonce, bytes memory signature) external</h3>
+<p>Redeems a coupon to add a new member.</p>
+<p><strong>dao</strong> is the DAO instance to be configured
+<strong>authorizedMember</strong> is the address that this coupon authorized to become a new member.
+<strong>amount</strong> is the amount of units that this member will receive.
+<strong>nonce</strong> is a unique identifier for this coupon request.</p>

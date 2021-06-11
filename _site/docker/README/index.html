@@ -1,0 +1,40 @@
+<h1>Graph Node Docker Image</h1>
+<p>Preconfigured Docker image for running a Graph Node.</p>
+<h2>Usage</h2>
+<p>Start ganache with <code>ganache-cli --host 0.0.0.0 --port 7545 --networkId 1337 --blockTime 10 --mnemonic &quot;twelve words including quotes&quot;</code> in one terminal window.</p>
+<blockquote>
+<p>Note that -h 0.0.0.0 is necessary for Ganache to be accessible from within Docker and from other machines. By default, Ganache only binds to 127.0.0.1, which can only be accessed from the host machine that Ganache runs on. <a href="https://thegraph.com/docs/quick-start#1.-set-up-ganache-cli">The Graph</a></p>
+</blockquote>
+<p>In a new terminal window, <code>truffle deploy --network ganache</code> and copy the <code>DaoFactory</code> contract address and block number into the respective <code>address</code> and <code>startBlock</code> (important: make sure the block number starts from 1 previous block, for example, if the block number is 19 add 18 as the <code>startBlock</code>) for the <code>DaoFactory</code> source in <code>subgraph/subgraph.yaml</code>.</p>
+<p>Then, <code>cd docker/</code> and <code>docker-compose up</code>.</p>
+<p>This will start IPFS, Postgres and Graph Node in Docker and create persistent
+data directories for IPFS and Postgres in <code>./data/ipfs</code> and <code>./data/postgres</code>. You
+can access these via:</p>
+<ul>
+<li>Graph Node:
+<ul>
+<li>GraphiQL: <code>http://localhost:8000/</code></li>
+<li>HTTP: <code>http://localhost:8000/subgraphs/name/&lt;subgraph-name&gt;</code></li>
+<li>WebSockets: <code>ws://localhost:8001/subgraphs/name/&lt;subgraph-name&gt;</code></li>
+<li>Admin: <code>http://localhost:8020/</code></li>
+</ul>
+</li>
+<li>IPFS:
+<ul>
+<li><code>127.0.0.1:5001</code> or <code>/ip4/127.0.0.1/tcp/5001</code></li>
+</ul>
+</li>
+<li>Postgres:
+<ul>
+<li><code>postgresql://graph-node:let-me-in@localhost:5432/graph-node</code></li>
+</ul>
+</li>
+</ul>
+<p>Once this is up and running, you can create and deploy your subgraph to the running Graph Node. To do this, in another terminal window from the project root directory, <code>truffle compile</code> to build the contracts, if they aren't already built.</p>
+<p>Then from the <code>subgraph</code> directory:</p>
+<ul>
+<li><code>npm ci</code> to install dependencies</li>
+<li><code>npm run codegen</code> to run the code generation</li>
+<li><code>yarn create-local</code> to allocate the subgraph name in the Graph Node</li>
+<li><code>yarn deploy-local</code> to deploy the subgraph to your local Graph Node</li>
+</ul>
