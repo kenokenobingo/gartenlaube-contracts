@@ -74,6 +74,7 @@ const contracts = {
   BankExtension: "./extensions/bank/BankExtension",
   ERC20Extension: "./extensions/token/erc20/ERC20Extension",
   ExecutorExtension: "./extensions/token/executor/ExecutorExtension",
+  WaterContract: "./extensions/water/WaterContract",
 
   // Config Adapters
   DaoRegistryAdapterContract: "./adapters/DaoRegistryAdapterContract",
