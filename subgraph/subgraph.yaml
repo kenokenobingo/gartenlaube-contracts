@@ -65,6 +65,8 @@
             file: ../build/contracts/OffchainVotingContract.json
           - name: VotingContract
             file: ../build/contracts/VotingContract.json
+          - name: WaterContract
+            file: ../build/contracts/WaterContract.json  
           - name: IVoting
             file: ../build/contracts/IVoting.json
         eventHandlers:
