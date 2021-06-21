@@ -301,6 +301,7 @@ const configureBatchVoting = async ({
 const prepareAdapters = async ({
   deployFunction,
   VotingContract,
+  WaterContract,
   ConfigurationContract,
   TributeContract,
   TributeNFTContract,
@@ -316,6 +317,7 @@ const prepareAdapters = async ({
   CouponOnboardingContract,
 }) => {
   let voting,
+    water,
     configuration,
     ragequit,
     managing,
@@ -331,6 +333,7 @@ const prepareAdapters = async ({
     tributeNFT;
 
   voting = await deployFunction(VotingContract);
+  water = await deployFunction(WaterContract);
   configuration = await deployFunction(ConfigurationContract);
   ragequit = await deployFunction(RagequitContract);
   managing = await deployFunction(ManagingContract);
@@ -347,6 +350,7 @@ const prepareAdapters = async ({
 
   return {
     voting,
+    water,
     configuration,
     ragequit,
     guildkick,
@@ -375,6 +379,7 @@ const createIdentityDao = async (options) => {
 const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
   const {
     voting,
+    water,
     configuration,
     ragequit,
     guildkick,
@@ -414,6 +419,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     bankAdapter,
     nftAdapter,
     voting,
+    water,
     configuration,
     couponOnboarding,
     tribute,
@@ -430,6 +436,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     dao,
     adapters: {
       voting,
+      water,
       configuration,
       ragequit,
       guildkick,
@@ -463,6 +470,7 @@ const configureDao = async ({
   nftExtension,
   erc20TokenExtension,
   voting,
+  water,
   configuration,
   couponOnboarding,
   tribute,
@@ -480,6 +488,7 @@ const configureDao = async ({
     dao.address,
     [
       entryDao("voting", voting, {}),
+      entryDao("water", water, {}),
       entryDao("configuration", configuration, {
         SUBMIT_PROPOSAL: true,
         SET_CONFIGURATION: true,

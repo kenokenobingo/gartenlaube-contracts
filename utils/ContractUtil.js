@@ -82,6 +82,9 @@ const contracts = {
   ConfigurationContract: "./adapters/ConfigurationContract",
   ManagingContract: "./adapters/ManagingContract",
 
+  // Agricultural Adapter
+  WaterContract: "./adapters/water/WaterContract",
+
   // Voting Adapters
   VotingContract: "./adapters/VotingContract",
   SnapshotProposalContract: "./adapters/voting/SnapshotProposalContract",
