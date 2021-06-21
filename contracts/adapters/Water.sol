@@ -2,17 +2,17 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../../core/DaoRegistry.sol";
-import "../../core/DaoConstants.sol";
-import "../../guards/AdapterGuard.sol";
-import "../../guards/MemberGuard.sol";
+import "../core/DaoRegistry.sol";
+import "../core/DaoConstants.sol";
+import "../guards/AdapterGuard.sol";
+import "../guards/MemberGuard.sol";
 
 contract WaterContract is
     DaoConstants,
     AdapterGuard,
     MemberGuard
 {
-    bool irrigation;
+    bool public irrigation = false;
     uint256 timestamp;
     uint256 wateringTime;
     uint256 triggerHumidity;
@@ -31,7 +31,7 @@ contract WaterContract is
         newHumidity = humidity;
     }
 
-    function getStatus() public view returns(uint256) {
-        return newHumidity;
+    function getHumidity() public view returns (bool) {
+        return irrigation;
     }
 }
