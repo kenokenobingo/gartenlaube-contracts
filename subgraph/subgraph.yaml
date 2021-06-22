@@ -1,7 +1,7 @@
  
   specVersion: 0.0.2
   description: Tribute DAO Framework Subgraph
-  repository: https://github.com/openlawteam/tribute-contracts
+  repository: https://github.com/kenokenobingo/gartenlaube-contracts
   schema:
     file: ./schema.graphql
   dataSources:
