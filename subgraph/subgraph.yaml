@@ -1,7 +1,7 @@
  
   specVersion: 0.0.2
   description: Tribute DAO Framework Subgraph
-  repository: https://github.com/kenokenobingo/gartenlaube-contracts
+  repository: https://github.com/openlawteam/tribute-contracts
   schema:
     file: ./schema.graphql
   dataSources:
@@ -10,9 +10,9 @@
       name: DaoFactory
       network: rinkeby
       source:
-        address: "0x5FaE143494F2017D74ED798bf264F34Beef20918"
+        address: "0xc76bb843501271BD22C83fD6bda1D96AEE7D5F1F"
         abi: DaoFactory
-        startBlock: 8698033
+        startBlock: 8802471
       mapping:
         kind: ethereum/events
         apiVersion: 0.0.4
@@ -26,6 +26,8 @@
           - event: DAOCreated(address,string)
             handler: handleDaoCreated
         file: ./mappings/dao-factory-mapping.ts
+
+
 
   templates:
     # ====================================== DaoRegistry ====================================
@@ -65,8 +67,6 @@
             file: ../build/contracts/OffchainVotingContract.json
           - name: VotingContract
             file: ../build/contracts/VotingContract.json
-          - name: WaterContract
-            file: ../build/contracts/WaterContract.json  
           - name: IVoting
             file: ../build/contracts/IVoting.json
           - name: ERC20Extension
@@ -104,7 +104,7 @@
         apiVersion: 0.0.4
         language: wasm/assemblyscript
         entities:
-          - TokenBalance
+          - TokenHolder
           - Token
           - Member
         abis:
@@ -112,6 +112,8 @@
             file: ../build/contracts/BankExtension.json
           - name: ERC20
             file: ../build/contracts/ERC20.json
+          - name: ERC20Extension
+            file: ../build/contracts/ERC20Extension.json
         eventHandlers:
           - event: NewBalance(address,address,uint160)
             handler: handleNewBalance
