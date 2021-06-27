@@ -20,7 +20,7 @@ contract WaterContract is DaoConstants, AdapterGuard, MemberGuard {
         onlyMember(dao)
     {
         irrigation = true;
-        warning = true
+        warning = true;
         timestamp = block.timestamp;
         wateringTime = 20;
         triggerHumidity = humidity;
