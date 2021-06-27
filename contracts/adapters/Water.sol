@@ -9,6 +9,7 @@ import "../guards/MemberGuard.sol";
 
 contract WaterContract is DaoConstants, AdapterGuard, MemberGuard {
     bool public irrigation = false;
+    bool public warning = false;
     uint256 timestamp;
     uint256 wateringTime;
     uint256 triggerHumidity;
@@ -19,6 +20,7 @@ contract WaterContract is DaoConstants, AdapterGuard, MemberGuard {
         onlyMember(dao)
     {
         irrigation = true;
+        warning = true
         timestamp = block.timestamp;
         wateringTime = 20;
         triggerHumidity = humidity;
@@ -29,11 +31,16 @@ contract WaterContract is DaoConstants, AdapterGuard, MemberGuard {
         onlyMember(dao)
     {
         irrigation = false;
+        warning = false;
         timestamp = block.timestamp;
         newHumidity = humidity;
     }
 
-    function getHumidity() public view returns (bool) {
+    function getIrrigation() public view returns (bool) {
         return irrigation;
+    }
+
+    function getWarning() public view returns (bool) {
+        return warning;
     }
 }
