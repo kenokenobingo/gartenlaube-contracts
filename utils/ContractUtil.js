@@ -89,6 +89,7 @@ const contracts = {
   VotingContract: "./adapters/VotingContract",
   SnapshotProposalContract: "./adapters/voting/SnapshotProposalContract",
   OffchainVotingContract: "./adapters/voting/OffchainVotingContract",
+  OffchainVotingHashContract: "./adapters/voting/OffchainVotingHashContract",
   KickBadReporterAdapter: "./adapters/voting/KickBadReporterAdapter",
   BatchVotingContract: "./adapters/voting/BatchVotingContract",
 
