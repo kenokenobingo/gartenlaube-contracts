@@ -150,13 +150,8 @@ const deployMainnetDao = async (deployFunction, network, truffleImports) => {
     erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
     erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
     maxChunks: toBN("100000"),
-<<<<<<< HEAD
-    votingPeriod: 60, // 600 secs = 10 mins
-    gracePeriod: 30, // 600 secs = 10 mins
-=======
     votingPeriod: parseInt(process.env.VOTING_PERIOD_SECONDS),
     gracePeriod: parseInt(process.env.GRACE_PERIOD_SECONDS),
->>>>>>> 3ff19226e92929da131c72762cc655a1d67125ea
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: false,
@@ -165,11 +160,7 @@ const deployMainnetDao = async (deployFunction, network, truffleImports) => {
     couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
     daoName: process.env.DAO_NAME,
     owner: process.env.DAO_OWNER_ADDR,
-<<<<<<< HEAD
-    offchainAdmin: "0x9fF75B8e1D6A783c2De4535E46d986dbeB09CC31",
-=======
     offchainAdmin: process.env.OFFCHAIN_ADMIN_ADDR,
->>>>>>> 3ff19226e92929da131c72762cc655a1d67125ea
   });
 };
 
