@@ -1,8 +1,8 @@
 [
   {
     "network": "rinkeby",
-    "daoFactoryAddress": "0xc76bb843501271BD22C83fD6bda1D96AEE7D5F1F",
-    "daoFactoryStartBlock": 8802471,
+    "daoFactoryAddress": "0x58F6db89F218aB8c24e9f5Dd51bFf8b8f3BA4147",
+    "daoFactoryStartBlock": 8945342,
     "GITHUB_USERNAME": "kenokenobingo",
     "SUBGRAPH_NAME": "gartenlaube"
   }

@@ -37,6 +37,8 @@ type TributeDao @entity {
   nftCollection: NFTCollection! @derivedFrom(field: "tributeDao")
   "List of redeemed coupons"
   coupons: [Coupon]! @derivedFrom(field: "tributeDao")
+  "Irrigation status"
+  water: String
 }
 
 type Member @entity {
@@ -153,6 +155,11 @@ type Vote @entity {
   adapterName: VotingAdapterName!
   adapterAddress: Bytes!
   proposal: Proposal
+}
+
+type Water @entity {
+  id: ID!
+  irrigationStatus: String
 }
 
 type Bank @entity {

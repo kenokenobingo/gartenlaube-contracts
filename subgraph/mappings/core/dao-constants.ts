@@ -44,6 +44,9 @@ export let MANAGING_ID: string =
 export let VOTING_ID: string =
   "0x0e49311626a26ba5be58a3b13d239908e80ce0dffdd5c50bf1d9c82ff35d1ab3";
 
+export let WATER_ID: string =
+  "0xe19f737e090ca4f6c1ca3f51ddee5811f44a4e367e08bc409cac6045749c2883";
+
 /**
  * Extensions
  */

@@ -1,4 +1,4 @@
-import { Address, Bytes, log } from "@graphprotocol/graph-ts";
+import { store, Address, Bytes, log } from "@graphprotocol/graph-ts";
 
 import { DistributeContract } from "../../generated/templates/DaoRegistry/DistributeContract";
 import { OnboardingContract } from "../../generated/templates/DaoRegistry/OnboardingContract";
@@ -7,6 +7,7 @@ import { ManagingContract } from "../../generated/templates/DaoRegistry/Managing
 import { FinancingContract } from "../../generated/templates/DaoRegistry/FinancingContract";
 import { GuildKickContract } from "../../generated/templates/DaoRegistry/GuildKickContract";
 import { TributeNFTContract } from "../../generated/templates/DaoRegistry/TributeNFTContract";
+import { WaterContract } from "../../generated/templates/DaoRegistry/WaterContract";
 
 import { Proposal } from "../../generated/schema";
 
@@ -18,6 +19,7 @@ import {
   FINANCING_ID,
   GUILDKICK_ID,
   TRIBUTE_NFT_ID,
+  WATER_ID,
 } from "../core/dao-constants";
 
 export function getProposalDetails(
@@ -47,6 +49,9 @@ export function getProposalDetails(
   } else if (TRIBUTE_NFT_ID.toString() == adapterId.toHexString()) {
     log.info("INFO TRIBUTE_NFT_ID, proposalId: {}", [proposalId.toHexString()]);
     tributeNFT(adapterAdddress, daoAddress, proposalId);
+  } else if (WATER_ID.toString() == adapterId.toHexString()) {
+    log.info("INFO WATER_ID, proposalId: {}", [proposalId.toHexString()]);
+    water(adapterAdddress, daoAddress, proposalId);
   }
 }
 
@@ -249,6 +254,27 @@ function guildkick(
 
     proposal.save();
   }
+}
+
+function water(
+  adapterAdddress: Address,
+  daoAddress: Address,
+  proposalId: Bytes
+): void {
+  let water = WaterContract.bind(adapterAdddress);
+
+  let data = water.getIrrigation();
+  let status :String;
+
+  if (data) {
+    status = "True";
+  } else if (!data) {
+    status = "False";
+  } else {
+    status = "undefined"
+  }
+
+  // store.set("Irrigation Status", proposalId.toString(), );
 }
 
 function tributeNFT(

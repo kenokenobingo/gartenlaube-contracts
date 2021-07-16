@@ -215,6 +215,15 @@ const contracts = [
     type: ContractType.Adapter,
   },
 
+  // Water Adapter
+  {
+    name: "WaterContract",
+    path: "../contract/adapters/WaterContract",
+    enabled: true,
+    version: "0.1.0",
+    type: ContractType.Adapter,
+  },
+
   // Withdraw / Kick Adapters
   {
     name: "RagequitContract",
